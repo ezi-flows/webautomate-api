@@ -1,0 +1,33 @@
+# Copy to .github/workflows/webautomate.yml in your repository.
+# Secrets: WEBAUTOMATE_API_TOKEN (scopes projects.run and results.read).
+# Variables: WEBAUTOMATE_ACCOUNT_ID and WEBAUTOMATE_PROJECT_ID.
+name: Webautomate
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  webautomate:
+    runs-on: ubuntu-latest
+    # Longer than the action's own timeout, so the action can cancel the build first.
+    timeout-minutes: 40
+    steps:
+      - name: Run Webautomate project
+        id: webautomate
+        uses: ezi-flows/webautomate-api/actions/run-build@v1
+        with:
+          api-token: ${{ secrets.WEBAUTOMATE_API_TOKEN }}
+          account-id: ${{ vars.WEBAUTOMATE_ACCOUNT_ID }}
+          project-id: ${{ vars.WEBAUTOMATE_PROJECT_ID }}
+          timeout-minutes: 30
+
+      - name: Keep the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: webautomate-report
+          path: |
+            webautomate-result.json
+            webautomate-junit.xml

@@ -12,6 +12,19 @@ Each example is self-contained with its own `README.md` and entry point.
 | [projects](./examples/projects) | List projects (paginated) and delete a project |
 | [automations](./examples/automations) | Queue a build and read a build's results |
 | [webhooks](./examples/webhooks) | Receive webhook events and verify their signatures |
+| [ci](./examples/ci) | Run a build from CI and pass or fail the job: GitHub Action, Jenkinsfile, and a dependency-free runner |
+
+## GitHub Action
+
+```yaml
+- uses: ezi-flows/webautomate-api/actions/run-build@v1
+  with:
+    api-token: ${{ secrets.WEBAUTOMATE_API_TOKEN }}
+    account-id: ${{ vars.WEBAUTOMATE_ACCOUNT_ID }}
+    project-id: ${{ vars.WEBAUTOMATE_PROJECT_ID }}
+```
+
+See [examples/ci](./examples/ci) for inputs, outputs, exit codes, and best practices.
 
 ## Prerequisites
 
@@ -31,4 +44,4 @@ All requests go to `https://api.webautomate.app/developer/v1` with an `Authoriza
 
 ## Related
 
-- [`webautomate-mcp`](https://github.com/w7-3/webautomate-mcp) — MCP server for Webautomate _(coming soon)_
+- [`webautomate-mcp`](https://github.com/ezi-flows/webautomate-mcp) — MCP server for Webautomate _(coming soon)_
