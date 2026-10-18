@@ -33,4 +33,4 @@ Builds queued through the API are charged like manual runs and appear with the v
 ## Required scopes
 
 - `projects.run`: queue a build
-- `results.read`: read build results
+- `results.read`: read the build's status and results. The example reads the status right after queueing, so it needs this scope even when it only queues a build.

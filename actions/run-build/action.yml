@@ -1,13 +1,13 @@
-name: Webautomate Project-Run
-description: Run a Webautomate project build and pass or fail the job on its outcome.
-author: Webautomate
+name: WebAutomate Project-Run
+description: Run a WebAutomate project build and pass or fail the job on its outcome.
+author: WebAutomate
 branding:
   icon: check-circle
   color: purple
 
 inputs:
   api-token:
-    description: Webautomate API token with the projects.run and results.read scopes. Pass it from a secret.
+    description: WebAutomate API token with the projects.run and results.read scopes. Pass it from a secret.
     required: true
   account-id:
     description: Account ID the token belongs to.
@@ -47,7 +47,7 @@ outputs:
     description: Build state (success, mixed, failure, timeout, cancel, terminated), or dequeued, rejected or timeout.
     value: ${{ steps.run.outputs.outcome }}
   results-url:
-    description: Link to the build in Webautomate.
+    description: Link to the build in WebAutomate.
     value: ${{ steps.run.outputs.results-url }}
 
 runs:
