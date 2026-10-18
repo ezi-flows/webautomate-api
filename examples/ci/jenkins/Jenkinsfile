@@ -1,4 +1,4 @@
-// Runs a Webautomate project build and reports it as test results.
+// Runs a WebAutomate project build and reports it as test results.
 // Credentials: a "Secret text" credential with the ID webautomate-api-token
 // (an API token with the projects.run and results.read scopes).
 // The agent needs Node.js 18 or later and curl.
@@ -19,7 +19,7 @@ pipeline {
     }
 
     stages {
-        stage('Webautomate') {
+        stage('WebAutomate') {
             steps {
                 sh 'curl -fsSL "$WEBAUTOMATE_RUNNER_URL" -o webautomate-run.mjs'
                 withCredentials([string(credentialsId: 'webautomate-api-token', variable: 'WEBAUTOMATE_API_TOKEN')]) {
@@ -27,9 +27,9 @@ pipeline {
                         // 0 passed, 1 the build failed, 2 not queued or usage error, 3 timed out.
                         def exitCode = sh(script: 'node webautomate-run.mjs', returnStatus: true)
                         if (exitCode == 1) {
-                            unstable('The Webautomate build did not pass.')
+                            unstable('The WebAutomate build did not pass.')
                         } else if (exitCode != 0) {
-                            error("The Webautomate run could not complete (exit code ${exitCode}).")
+                            error("The WebAutomate run could not complete (exit code ${exitCode}).")
                         }
                     }
                 }

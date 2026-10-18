@@ -1,6 +1,6 @@
 # CI/CD
 
-Runs a Webautomate project build from a pipeline, waits for its outcome, and fails the job unless it passes. The runner `webautomate-run.mjs` is a single file without dependencies (Node.js 18+). The GitHub Action and the Jenkins example both use it.
+Runs a WebAutomate project build from a pipeline, waits for its outcome, and fails the job unless it passes. The runner `webautomate-run.mjs` is a single file without dependencies (Node.js 18+). The GitHub Action and the Jenkins example both use it.
 
 ## GitHub Actions
 
@@ -40,7 +40,7 @@ cp .env.example .env   # fill in token, account ID, and project ID
 node --env-file=.env webautomate-run.mjs   # Node.js 20.6+; otherwise export the variables
 ```
 
-Against a local Webautomate stack with a self-signed or mkcert certificate, let Node.js trust it: `NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" node --env-file=.env webautomate-run.mjs`. Without it the runner stops with `Network error: UNABLE_TO_VERIFY_LEAF_SIGNATURE`.
+Against a local WebAutomate stack with a self-signed or mkcert certificate, let Node.js trust it: `NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" node --env-file=.env webautomate-run.mjs`. Without it the runner stops with `Network error: UNABLE_TO_VERIFY_LEAF_SIGNATURE`.
 
 Settings are environment variables (`WEBAUTOMATE_API_TOKEN`, `WEBAUTOMATE_ACCOUNT_ID`, `WEBAUTOMATE_PROJECT_ID`, and the optional ones in [`.env.example`](./.env.example)). Flags override the non-secret ones, for example `--project-id=…`, `--allow-mixed`, `--timeout-minutes=45`.
 

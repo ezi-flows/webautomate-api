@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Runs a Webautomate project build from a CI pipeline and exits with its outcome.
+// Runs a WebAutomate project build from a CI pipeline and exits with its outcome.
 // Self-contained (Node.js 18+, no dependencies) so CI jobs can download this single file.
 
 import {appendFileSync, mkdirSync, writeFileSync} from 'fs';
@@ -375,7 +375,7 @@ const escapeXml = (value) => String(value ?? '').replace(/[<>&'"]/g, (char) => (
  * failed. Builds without results get a single test case for the build itself.
  */
 export const toJUnit = ({projectId, run}) => {
-    const suiteName = `Webautomate project ${projectId}`;
+    const suiteName = `WebAutomate project ${projectId}`;
     const className = `webautomate.${projectId}`;
     const cases = run.results.length
         ? run.results.map((result) => {
@@ -396,7 +396,7 @@ export const toJUnit = ({projectId, run}) => {
 
     return [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        `<testsuites name="Webautomate" tests="${cases.length}" failures="${failures}">`,
+        `<testsuites name="WebAutomate" tests="${cases.length}" failures="${failures}">`,
         `  <testsuite name="${escapeXml(suiteName)}" tests="${cases.length}" failures="${failures}" skipped="${skipped}">`,
         ...cases,
         '  </testsuite>',
@@ -413,7 +413,7 @@ export const toMarkdownSummary = ({projectId, run}) => {
     const failed = run.results.filter(isFailedResult).length;
 
     return [
-        `### Webautomate ${run.outcome.passed ? 'passed' : 'failed'}`,
+        `### WebAutomate ${run.outcome.passed ? 'passed' : 'failed'}`,
         '',
         '| | |',
         '| --- | --- |',
@@ -422,7 +422,7 @@ export const toMarkdownSummary = ({projectId, run}) => {
         `| Build | ${build?.id ?? '–'} |`,
         `| Duration | ${duration} |`,
         `| Results | ${run.results.length} (${failed} failed) |`,
-        ...(run.status?.resultsUrl ? [`| Details | [Open in Webautomate](${run.status.resultsUrl}) |`] : []),
+        ...(run.status?.resultsUrl ? [`| Details | [Open in WebAutomate](${run.status.resultsUrl}) |`] : []),
         '',
         run.outcome.reason,
         '',
@@ -532,7 +532,7 @@ const main = async () => {
         return run.exitCode;
     } catch (error) {
         isFinished = true;
-        console.error(`Webautomate request failed: ${error.message}${error.code ? ` (${error.code})` : ''}`);
+        console.error(`WebAutomate request failed: ${error.message}${error.code ? ` (${error.code})` : ''}`);
         return EXIT_CODES.error;
     }
 };

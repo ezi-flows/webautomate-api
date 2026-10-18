@@ -1,6 +1,6 @@
 # Webhooks
 
-A minimal webhook receiver for Webautomate build, project, and billing events. It verifies signatures and drops duplicate deliveries.
+A minimal webhook receiver for WebAutomate build, project, and billing events. It verifies signatures and drops duplicate deliveries.
 
 ## Run
 
@@ -10,7 +10,7 @@ npm install
 npm start
 ```
 
-Then expose it publicly so Webautomate can reach it:
+Then expose it publicly so WebAutomate can reach it:
 
 ```bash
 npx ngrok http 3000
@@ -23,7 +23,7 @@ Register the resulting URL (`https://<id>.ngrok.io/webhook`) under **My Account 
 - Starts an HTTP server on `POST /webhook`
 - When `WEBHOOK_SIGNING_SECRET` is set, verifies `X-WebAutomate-Signature-V2` (`t=<sentAt>,sha256=<hex HMAC-SHA256 of "<sentAt>." + raw body>`) against the raw request body, and rejects timestamps more than 5 minutes old
 - Deduplicates on `eventId`, because delivery is at least once and retries keep the same `eventId`
-- Replies `200` right away, since Webautomate expects a 2xx within 10 seconds
+- Replies `200` right away, since WebAutomate expects a 2xx within 10 seconds
 - Handles `build.completed`, `build.failed`, `build.mixed`, `build.cancelled`, and `notification.test`, and logs every other event type
 
 ## Envelope

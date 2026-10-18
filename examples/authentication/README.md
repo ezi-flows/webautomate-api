@@ -18,4 +18,4 @@ npm start
 
 ## Get a token
 
-Go to **My Account → Developers** in your Webautomate dashboard, click **Generate API token**, and select at least the `account.read` scope. Copy the token right away, because it is shown only once. The account ID in your `.env` must be the account the token belongs to.
+Go to **My Account → Developers** in your WebAutomate dashboard, click **Generate API token**, and select at least the `account.read` scope. Copy the token right away, because it is shown only once. The account ID in your `.env` must be the account the token belongs to.

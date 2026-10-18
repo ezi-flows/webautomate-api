@@ -47,7 +47,7 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        // Acknowledge quickly; Webautomate expects a 2xx within 10 seconds.
+        // Acknowledge quickly; WebAutomate expects a 2xx within 10 seconds.
         res.writeHead(200).end('ok');
 
         if (seenEventIds.has(event.eventId)) {

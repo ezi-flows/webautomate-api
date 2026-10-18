@@ -1,7 +1,7 @@
 # Copy to .github/workflows/webautomate.yml in your repository.
 # Secrets: WEBAUTOMATE_API_TOKEN (scopes projects.run and results.read).
 # Variables: WEBAUTOMATE_ACCOUNT_ID and WEBAUTOMATE_PROJECT_ID.
-name: Webautomate
+name: WebAutomate
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     # Longer than the action's own timeout, so the action can cancel the build first.
     timeout-minutes: 40
     steps:
-      - name: Run Webautomate project
+      - name: Run WebAutomate project
         id: webautomate
         uses: ezi-flows/webautomate-api/actions/run-build@v1
         with:
