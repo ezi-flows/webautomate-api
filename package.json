@@ -1,6 +1,6 @@
 {
   "name": "webautomate-api",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "WebAutomate Developer API examples and the run-build GitHub Action",
   "scripts": {
