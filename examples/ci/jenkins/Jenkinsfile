@@ -1,0 +1,46 @@
+// Runs a WebAutomate project build and reports it as test results.
+// Credentials: a "Secret text" credential with the ID webautomate-api-token
+// (an API token with the projects.run and results.read scopes).
+// The agent needs Node.js 18 or later and curl.
+pipeline {
+    agent any
+
+    options {
+        // Longer than WEBAUTOMATE_TIMEOUT_MINUTES, so the runner can cancel the build first.
+        timeout(time: 40, unit: 'MINUTES')
+    }
+
+    environment {
+        WEBAUTOMATE_ACCOUNT_ID = 'your_account_id_here'
+        WEBAUTOMATE_PROJECT_ID = 'your_project_id_here'
+        WEBAUTOMATE_TIMEOUT_MINUTES = '30'
+        // Pin the runner to a released tag of ezi-flows/webautomate-api.
+        WEBAUTOMATE_RUNNER_URL = 'https://raw.githubusercontent.com/ezi-flows/webautomate-api/v1/examples/ci/webautomate-run.mjs'
+    }
+
+    stages {
+        stage('WebAutomate') {
+            steps {
+                sh 'curl -fsSL "$WEBAUTOMATE_RUNNER_URL" -o webautomate-run.mjs'
+                withCredentials([string(credentialsId: 'webautomate-api-token', variable: 'WEBAUTOMATE_API_TOKEN')]) {
+                    script {
+                        // 0 passed, 1 the build failed, 2 not queued or usage error, 3 timed out.
+                        def exitCode = sh(script: 'node webautomate-run.mjs', returnStatus: true)
+                        if (exitCode == 1) {
+                            unstable('The WebAutomate build did not pass.')
+                        } else if (exitCode != 0) {
+                            error("The WebAutomate run could not complete (exit code ${exitCode}).")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'webautomate-junit.xml'
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'webautomate-result.json'
+        }
+    }
+}
