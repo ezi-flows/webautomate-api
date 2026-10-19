@@ -1,0 +1,12 @@
+{
+  "name": "webautomate-example-ci",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node webautomate-run.mjs",
+    "test": "node --test"
+  }
+}

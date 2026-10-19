@@ -1,0 +1,67 @@
+name: WebAutomate Project-Run
+description: Run a WebAutomate project build and pass or fail the job on its outcome.
+author: WebAutomate
+branding:
+  icon: check-circle
+  color: purple
+
+inputs:
+  api-token:
+    description: WebAutomate API token with the projects.run and results.read scopes. Pass it from a secret.
+    required: true
+  account-id:
+    description: Account ID the token belongs to.
+    required: true
+  project-id:
+    description: Project to run. Use a project dedicated to this pipeline, without a schedule.
+    required: true
+  api-root:
+    description: API origin, for example https://api.webautomate.app.
+    required: false
+    default: https://api.webautomate.app
+  timeout-minutes:
+    description: Cancel the build and fail when there is no outcome after this many minutes.
+    required: false
+    default: '30'
+  allow-mixed:
+    description: Pass the job when the build finishes with state "mixed" (some pages failed).
+    required: false
+    default: 'false'
+  fail-on-visual-changes:
+    description: Fail the job when visual test screenshots changed or were rejected.
+    required: false
+    default: 'false'
+  output-dir:
+    description: Directory for webautomate-result.json and webautomate-junit.xml.
+    required: false
+    default: '.'
+
+outputs:
+  build-request-id:
+    description: ID of the build request, for the Developer API status and cancel endpoints.
+    value: ${{ steps.run.outputs.build-request-id }}
+  build-id:
+    description: Build number, once a build started.
+    value: ${{ steps.run.outputs.build-id }}
+  outcome:
+    description: Build state (success, mixed, failure, timeout, cancel, terminated), or dequeued, rejected or timeout.
+    value: ${{ steps.run.outputs.outcome }}
+  results-url:
+    description: Link to the build in WebAutomate.
+    value: ${{ steps.run.outputs.results-url }}
+
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        WEBAUTOMATE_API_TOKEN: ${{ inputs.api-token }}
+        WEBAUTOMATE_ACCOUNT_ID: ${{ inputs.account-id }}
+        WEBAUTOMATE_PROJECT_ID: ${{ inputs.project-id }}
+        WEBAUTOMATE_API_ROOT: ${{ inputs.api-root }}
+        WEBAUTOMATE_TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+        WEBAUTOMATE_ALLOW_MIXED: ${{ inputs.allow-mixed }}
+        WEBAUTOMATE_FAIL_ON_VISUAL_CHANGES: ${{ inputs.fail-on-visual-changes }}
+        WEBAUTOMATE_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: node "$GITHUB_ACTION_PATH/../../examples/ci/webautomate-run.mjs"

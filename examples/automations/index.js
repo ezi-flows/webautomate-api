@@ -26,10 +26,24 @@ async function queueBuild() {
 
     // A build that cannot be queued right now still returns HTTP 200, with success: false.
     if (!body?.success) {
-        throw new Error(`Build not queued: ${body?.error?.message ?? 'unknown reason'}`);
+        throw new Error(`Build not queued: ${body?.error?.code ?? ''} ${body?.error?.message ?? 'unknown reason'}`.trim());
     }
 
-    return body.data.buildResult;
+    return body.data.buildRequest;
+}
+
+async function getBuildStatus(buildRequestId) {
+    const res = await fetch(
+        `${BASE_URL}/project-build-status/${WEBAUTOMATE_ACCOUNT_ID}/${WEBAUTOMATE_PROJECT_ID}/${buildRequestId}`,
+        {headers},
+    );
+    const body = await res.json().catch(() => null);
+
+    if (!res.ok || !body?.success) {
+        throw new Error(`Failed to read build status (${res.status}): ${body?.error?.message ?? 'unknown error'}`);
+    }
+
+    return body.data;
 }
 
 async function getBuildResults(buildId, {limit = 25} = {}) {
@@ -59,10 +73,14 @@ async function getBuildResults(buildId, {limit = 25} = {}) {
 
 if (!WEBAUTOMATE_BUILD_ID) {
     console.log(`Queueing build for project ${WEBAUTOMATE_PROJECT_ID}...`);
-    await queueBuild();
-    console.log('Build queued.');
-    console.log('The outcome arrives as a build.* webhook (see ../webhooks).');
-    console.log('Then set WEBAUTOMATE_BUILD_ID to its payload.requestData.buildId and run again to read the results.');
+    const buildRequest = await queueBuild();
+    console.log(`Build queued as build request ${buildRequest.id}.`);
+
+    const status = await getBuildStatus(buildRequest.id);
+    console.log(`Current state: ${status.buildRequest.state}`);
+    console.log('Follow it with GET /project-build-status/... until the state is "completed" (see ../ci),');
+    console.log('or wait for its build.* webhook (see ../webhooks).');
+    console.log('Then set WEBAUTOMATE_BUILD_ID to the build ID and run again to read the results.');
 } else {
     console.log(`Reading results for build ${WEBAUTOMATE_BUILD_ID}...`);
     const {build, results} = await getBuildResults(WEBAUTOMATE_BUILD_ID);

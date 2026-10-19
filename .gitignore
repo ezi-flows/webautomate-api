@@ -1,3 +1,7 @@
 node_modules/
 .env
 dist/
+.idea/
+.DS_Store
+examples/ci/webautomate-result.json
+examples/ci/webautomate-junit.xml

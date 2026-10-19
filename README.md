@@ -1,34 +1,53 @@
-# webautomate-api
+# WebAutomate API examples
 
-Runnable API integration examples for [Webautomate](https://webautomate.app), built against the [Developer API documentation](https://webautomate.app/documentation/api).
-
-Each example is self-contained with its own `README.md` and entry point.
+Runnable examples for the [WebAutomate Developer API](https://webautomate.app/documentation/api). They show how to queue project builds, follow their status, read results, receive webhooks, and run builds from your CI/CD pipeline.
 
 ## Examples
 
-| Example | Description |
-|---------|-------------|
-| [authentication](./examples/authentication) | Verify an API token by reading your account |
-| [projects](./examples/projects) | List projects (paginated) and delete a project |
-| [automations](./examples/automations) | Queue a build and read a build's results |
-| [webhooks](./examples/webhooks) | Receive webhook events and verify their signatures |
+| Example | What it shows | Token scopes |
+|---------|---------------|--------------|
+| [authentication](./examples/authentication) | Check that an API token works by reading your account | `account.read` |
+| [projects](./examples/projects) | List your projects page by page, and delete a project | `projects.read`, `projects.delete` (optional) |
+| [automations](./examples/automations) | Queue a build, check its status, and read its results | `projects.run`, `results.read` |
+| [webhooks](./examples/webhooks) | Receive build, project and billing events and verify their signatures | None: uses your webhook signing secret |
+| [ci](./examples/ci) | Run a build from GitHub Actions, Jenkins or any other CI, and pass or fail the job on its outcome | `projects.run`, `results.read` |
 
-## Prerequisites
+Each example has its own `README.md` with the details.
 
-- Node.js 18+
-- A Webautomate API token. Generate one under **My Account → Developers** in your [dashboard](https://webautomate.app/dashboard/account?account_tab=developers). It is shown only once.
+## Run builds from GitHub Actions
 
-## Getting started
+```yaml
+- uses: ezi-flows/webautomate-api/actions/run-build@v1
+  with:
+    api-token: ${{ secrets.WEBAUTOMATE_API_TOKEN }}
+    account-id: ${{ vars.WEBAUTOMATE_ACCOUNT_ID }}
+    project-id: ${{ vars.WEBAUTOMATE_PROJECT_ID }}
+```
+
+The step queues the build, waits for it to finish, and fails the job unless the build passes. The [ci](./examples/ci) example lists all inputs and outputs, and also includes a Jenkins pipeline and a runner for other CI systems.
+
+## Before you start
+
+- Node.js 18 or later
+- An API token. In WebAutomate, open [**My Account → Developers**](https://webautomate.app/dashboard/account?account_tab=developers), choose **Generate API token**, and select the scopes the example needs. Copy the token right away, because it is shown only once.
+- The ID of the account the token belongs to, and for builds, the ID of the project to run
+
+## Run an example
 
 ```bash
-cd examples/<example-name>
-cp .env.example .env   # add your API token and account ID
+cd examples/<example>
+cp .env.example .env   # add your API token and IDs
 npm install
 npm start
 ```
 
-All requests go to `https://api.webautomate.app/developer/v1` with an `Authorization: Bearer <token>` header. Every response has a `success` field. Check it even on HTTP 200.
+## Good to know
 
-## Related
+- All requests go to `https://api.webautomate.app/developer/v1` and send the token as `Authorization: Bearer <token>`.
+- Every response has a `success` field, so check it even when the HTTP status is 200. A build that can't be queued, for example because the project is already running, returns HTTP 200 with `success: false` and an `error.code`.
+- Keep tokens out of your code. Store them as CI secrets or in a local `.env` file. The examples' `.gitignore` keeps `.env` files out of Git.
 
-- [`webautomate-mcp`](https://github.com/w7-3/webautomate-mcp) — MCP server for Webautomate _(coming soon)_
+## Documentation
+
+- [Developer API reference](https://webautomate.app/documentation/api)
+- [WebAutomate](https://webautomate.app)

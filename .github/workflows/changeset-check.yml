@@ -1,0 +1,36 @@
+name: Changeset Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+
+jobs:
+  check-changeset:
+    name: Check for changeset
+    runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'skip changeset') &&
+      !startsWith(github.event.pull_request.title, 'Version Packages')
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for changeset
+        run: |
+          # Get the list of changed files between this PR branch and the base branch
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          # Look for any .changeset/*.md file
+          CHANGESET=$(echo "$CHANGED" | grep -E '^\.changeset/.+\.md$' | grep -v '^\.changeset/README\.md$' || true)
+
+          if [ -z "$CHANGESET" ]; then
+            echo "No changeset found."
+            echo ""
+            echo "Please add a changeset by running: npm run changeset"
+            echo "Or add the 'skip changeset' label to this PR if no changeset is needed."
+            exit 1
+          else
+            echo "Changeset found:"
+            echo "$CHANGESET"
+          fi
