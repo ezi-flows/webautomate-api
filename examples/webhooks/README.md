@@ -5,10 +5,12 @@ A minimal webhook receiver for WebAutomate build, project, and billing events. I
 ## Run
 
 ```bash
-cp .env.example .env
+cp .env.example .env   # set WEBHOOK_SIGNING_SECRET
 npm install
 npm start
 ```
+
+`npm start` refuses to run without `WEBHOOK_SIGNING_SECRET`. To try the receiver locally before you have a secret, run `npm run start:unverified`: it accepts every request without checking signatures, so never expose it publicly.
 
 Then expose it publicly so WebAutomate can reach it:
 
@@ -21,7 +23,7 @@ Register the resulting URL (`https://<id>.ngrok.io/webhook`) under **My Account 
 ## What it does
 
 - Starts an HTTP server on `POST /webhook`
-- When `WEBHOOK_SIGNING_SECRET` is set, verifies `X-WebAutomate-Signature-V2` (`t=<sentAt>,sha256=<hex HMAC-SHA256 of "<sentAt>." + raw body>`) against the raw request body, and rejects timestamps more than 5 minutes old
+- Verifies `X-WebAutomate-Signature-V2` (`t=<sentAt>,sha256=<hex HMAC-SHA256 of "<sentAt>." + raw body>`) against the raw request body, and rejects timestamps more than 5 minutes old
 - Deduplicates on `eventId`, because delivery is at least once and retries keep the same `eventId`
 - Replies `200` right away, since WebAutomate expects a 2xx within 10 seconds
 - Handles `build.completed`, `build.failed`, `build.mixed`, `build.cancelled`, and `notification.test`, and logs every other event type
@@ -39,6 +41,6 @@ Register the resulting URL (`https://<id>.ngrok.io/webhook`) under **My Account 
 }
 ```
 
-For `build.*` events, `payload` contains `projectConfig` (credentials masked as `[REDACTED]`), `requestData` (the build record: `projectId`, `buildId`, `state`, `start`, `end`, ...), `buildEvents`, and `buildResults`. To read the full paginated results, pass `requestData.buildId` to the [automations](../automations) example as `WEBAUTOMATE_BUILD_ID`.
+For `build.*` events, `payload` contains `projectConfig` (credentials masked as `[REDACTED]`), `requestData` (the build record: `projectId`, `buildId`, `state`, `start`, `end`, ...), `buildEvents`, and `buildResults`. To read the full paginated results, pass `requestData.buildId` to the [automations](../automations) example: `npm run results -- <buildId>`.
 
 Other events: `build.retryExhausted`, `build.blocked`, `build.dequeued`, `project.invalid`, `project.paused`, and `billing.*`.

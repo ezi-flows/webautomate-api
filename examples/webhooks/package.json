@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:unverified": "node index.js --skip-signature-verification"
   },
   "dependencies": {
     "dotenv": "^16.0.0"

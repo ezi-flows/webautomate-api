@@ -5,6 +5,14 @@ import http from 'http';
 const PORT = process.env.PORT || 3000;
 const SIGNING_SECRET = process.env.WEBHOOK_SIGNING_SECRET;
 const SIGNATURE_TOLERANCE_MS = 5 * 60 * 1000;
+// Skipping verification is opt-in (npm run start:unverified) and meant for local tests only.
+const SKIP_SIGNATURE_VERIFICATION = process.argv.includes('--skip-signature-verification');
+
+if (!SIGNING_SECRET && !SKIP_SIGNATURE_VERIFICATION) {
+    console.error('Missing WEBHOOK_SIGNING_SECRET in .env. Set it to the Signing Secret from your WebAutomate webhook settings.');
+    console.error('For a local test without signature checks, run: npm run start:unverified');
+    process.exit(1);
+}
 
 // Delivery is at least once; remember recent eventIds to drop duplicates.
 // Use a persistent store in production.
@@ -33,7 +41,7 @@ const server = http.createServer((req, res) => {
         // Verify against the exact raw bytes, before JSON parsing.
         const rawBody = Buffer.concat(chunks);
 
-        if (SIGNING_SECRET && !isValidSignatureV2(rawBody, req.headers['x-webautomate-signature-v2'], SIGNING_SECRET)) {
+        if (!SKIP_SIGNATURE_VERIFICATION && !isValidSignatureV2(rawBody, req.headers['x-webautomate-signature-v2'], SIGNING_SECRET)) {
             console.warn('Rejected webhook: invalid or expired signature');
             res.writeHead(401).end();
             return;
@@ -91,7 +99,7 @@ function handleEvent({eventId, eventType, payload, sentAt}) {
 server.listen(PORT, () => {
     console.log(`Webhook listener running on http://localhost:${PORT}/webhook`);
     console.log('Expose it publicly with: npx ngrok http ' + PORT);
-    if (!SIGNING_SECRET) {
-        console.warn('WEBHOOK_SIGNING_SECRET is not set: signatures will NOT be verified.');
+    if (SKIP_SIGNATURE_VERIFICATION) {
+        console.warn('Signature verification is OFF: any request to /webhook is accepted. Use this for local tests only.');
     }
 });
