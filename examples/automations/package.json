@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "queue": "node index.js queue",
+    "status": "node index.js status",
+    "results": "node index.js results"
   },
   "dependencies": {
     "dotenv": "^16.0.0"
