@@ -38,8 +38,10 @@ The step queues the build, waits for it to finish, and fails the job unless the 
 cd examples/<example>
 cp .env.example .env   # add your API token and IDs
 npm install
-npm start
+npm start              # prints the example's commands, or runs it if it has only one
 ```
+
+Examples that can do more than one thing take an explicit command, for example `npm run queue` or `npm run delete -- <projectId>`. Each example's README lists its commands.
 
 ## Good to know
 
