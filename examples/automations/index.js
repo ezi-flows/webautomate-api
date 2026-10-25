@@ -1,12 +1,32 @@
 import 'dotenv/config';
 
 const BASE_URL = 'https://api.webautomate.app/developer/v1';
-const {WEBAUTOMATE_API_TOKEN, WEBAUTOMATE_ACCOUNT_ID, WEBAUTOMATE_PROJECT_ID, WEBAUTOMATE_BUILD_ID} = process.env;
+const {WEBAUTOMATE_API_TOKEN, WEBAUTOMATE_ACCOUNT_ID, WEBAUTOMATE_PROJECT_ID} = process.env;
+
+const USAGE = `Usage:
+  npm run queue                      Queue a build and print its build request ID
+  npm run status -- <buildRequestId> Print the build request's state and, once the build started, its build ID
+  npm run results -- <buildId>       Read every result of a finished build`;
+
+const [command, id] = process.argv.slice(2);
+
+if (!['queue', 'status', 'results'].includes(command)) {
+    console.error(USAGE);
+    process.exit(1);
+}
+
+if (command !== 'queue' && !id) {
+    console.error(`Missing ${command === 'status' ? 'build request ID' : 'build ID'}.\n\n${USAGE}`);
+    process.exit(1);
+}
 
 if (!WEBAUTOMATE_API_TOKEN || !WEBAUTOMATE_ACCOUNT_ID || !WEBAUTOMATE_PROJECT_ID) {
     console.error('Missing required env vars. Check .env.example');
     process.exit(1);
 }
+
+// IDs come from the command line, so encode them before they become part of a URL path.
+const projectPath = `${encodeURIComponent(WEBAUTOMATE_ACCOUNT_ID)}/${encodeURIComponent(WEBAUTOMATE_PROJECT_ID)}`;
 
 const headers = {
     Authorization: `Bearer ${WEBAUTOMATE_API_TOKEN}`,
@@ -15,7 +35,7 @@ const headers = {
 
 async function queueBuild() {
     const res = await fetch(
-        `${BASE_URL}/project-build/${WEBAUTOMATE_ACCOUNT_ID}/${WEBAUTOMATE_PROJECT_ID}`,
+        `${BASE_URL}/project-build/${projectPath}`,
         {method: 'POST', headers},
     );
     const body = await res.json().catch(() => null);
@@ -34,7 +54,7 @@ async function queueBuild() {
 
 async function getBuildStatus(buildRequestId) {
     const res = await fetch(
-        `${BASE_URL}/project-build-status/${WEBAUTOMATE_ACCOUNT_ID}/${WEBAUTOMATE_PROJECT_ID}/${buildRequestId}`,
+        `${BASE_URL}/project-build-status/${projectPath}/${encodeURIComponent(buildRequestId)}`,
         {headers},
     );
     const body = await res.json().catch(() => null);
@@ -54,7 +74,7 @@ async function getBuildResults(buildId, {limit = 25} = {}) {
     do {
         const query = new URLSearchParams({limit: String(limit), ...(cursor ? {cursor} : {})});
         const res = await fetch(
-            `${BASE_URL}/project-build-result/${WEBAUTOMATE_ACCOUNT_ID}/${WEBAUTOMATE_PROJECT_ID}/${buildId}?${query}`,
+            `${BASE_URL}/project-build-result/${projectPath}/${encodeURIComponent(buildId)}?${query}`,
             {headers},
         );
         const body = await res.json().catch(() => null);
@@ -71,28 +91,44 @@ async function getBuildResults(buildId, {limit = 25} = {}) {
     return {build, results};
 }
 
-if (!WEBAUTOMATE_BUILD_ID) {
-    console.log(`Queueing build for project ${WEBAUTOMATE_PROJECT_ID}...`);
-    const buildRequest = await queueBuild();
-    console.log(`Build queued as build request ${buildRequest.id}.`);
-
-    const status = await getBuildStatus(buildRequest.id);
-    console.log(`Current state: ${status.buildRequest.state}`);
-    console.log('Follow it with GET /project-build-status/... until the state is "completed" (see ../ci),');
-    console.log('or wait for its build.* webhook (see ../webhooks).');
-    console.log('Then set WEBAUTOMATE_BUILD_ID to the build ID and run again to read the results.');
-} else {
-    console.log(`Reading results for build ${WEBAUTOMATE_BUILD_ID}...`);
-    const {build, results} = await getBuildResults(WEBAUTOMATE_BUILD_ID);
-
-    console.log(`\nBuild state: ${build.state}`);
-    if (build.start && build.end) {
-        console.log(`Duration: ${((build.end - build.start) / 1000).toFixed(1)}s`);
+switch (command) {
+    case 'queue': {
+        console.log(`Queueing build for project ${WEBAUTOMATE_PROJECT_ID}...`);
+        const buildRequest = await queueBuild();
+        console.log(`Build queued. Build request ID: ${buildRequest.id}`);
+        console.log(`Check it with: npm run status -- ${buildRequest.id}`);
+        break;
     }
-    console.log(`Results: ${results.length} item(s)`);
 
-    if (results.length > 0) {
-        console.log('\nFirst result preview:');
-        console.log(JSON.stringify(results[0], null, 2));
+    case 'status': {
+        const {buildRequest} = await getBuildStatus(id);
+        console.log(`State: ${buildRequest.state}`);
+        if (buildRequest.buildId) {
+            console.log(`Build ID: ${buildRequest.buildId}`);
+            if (buildRequest.state === 'completed') {
+                console.log(`Read its results with: npm run results -- ${buildRequest.buildId}`);
+            }
+        } else {
+            console.log('The build has not started yet, so it has no build ID. Check again shortly,');
+            console.log('or wait for its build.* webhook (see ../webhooks).');
+        }
+        break;
+    }
+
+    case 'results': {
+        console.log(`Reading results for build ${id}...`);
+        const {build, results} = await getBuildResults(id);
+
+        console.log(`\nBuild state: ${build.state}`);
+        if (build.start && build.end) {
+            console.log(`Duration: ${((build.end - build.start) / 1000).toFixed(1)}s`);
+        }
+        console.log(`Results: ${results.length} item(s)`);
+
+        if (results.length > 0) {
+            console.log('\nFirst result preview:');
+            console.log(JSON.stringify(results[0], null, 2));
+        }
+        break;
     }
 }

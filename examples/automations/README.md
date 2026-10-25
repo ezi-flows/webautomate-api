@@ -1,26 +1,36 @@
 # Automations
 
-Queues a build for a project, or reads the results of a finished build.
+Queues a build for a project, checks its status, and reads the results of a finished build. Each step is its own command.
 
 ## Run
 
 ```bash
 cp .env.example .env   # fill in token, account ID, and project ID
 npm install
-npm start
+npm run queue                      # queue a build, prints its build request ID
+npm run status -- <buildRequestId> # prints the state and, once the build started, its build ID
+npm run results -- <buildId>       # reads every result of the finished build
 ```
+
+`npm start` without a command prints this usage.
 
 ## What it does
 
-**Without `WEBAUTOMATE_BUILD_ID`**, it queues a build:
+**`queue`** queues a build:
 
 - Calls `POST /developer/v1/project-build/:accountId/:projectId`
-- Checks `success` in the response. If the project cannot be queued (not active, already queued or running, invalid configuration, or not enough Usage Credits), the API still returns HTTP 200, with `"success": false` and the reason in `error.message`
-- The response contains `data.buildRequest.id`. The example reads `GET /developer/v1/project-build-status/:accountId/:projectId/:buildRequestId` once and prints the state (`queued`, `running`, `completed`, or `dequeued`). The [ci](../ci) example polls it until the build finishes. The outcome also arrives as a `build.completed`, `build.failed`, `build.mixed`, or `build.cancelled` webhook; run the [webhooks](../webhooks) example to receive it.
-- When nothing could be queued, `error.code` says why, for example `BUILD_IN_PROGRESS` or `INSUFFICIENT_USAGE_CREDITS`.
+- Checks `success` in the response. If the project cannot be queued (not active, already queued or running, invalid configuration, or not enough Usage Credits), the API still returns HTTP 200, with `"success": false` and the reason in `error.message`. `error.code` says why, for example `BUILD_IN_PROGRESS` or `INSUFFICIENT_USAGE_CREDITS`.
+- Prints the build request ID (`data.buildRequest.id`)
 
-**With `WEBAUTOMATE_BUILD_ID`** (the status endpoint's `data.buildRequest.buildId`, or the webhook's `payload.requestData.buildId`), it reads results:
+**`status <buildRequestId>`** checks the build request:
 
+- Calls `GET /developer/v1/project-build-status/:accountId/:projectId/:buildRequestId`
+- Prints the state (`queued`, `running`, `completed`, or `dequeued`) and, once the build has started, its build ID (`data.buildRequest.buildId`)
+- The [ci](../ci) example polls this endpoint until the build finishes. The outcome also arrives as a `build.completed`, `build.failed`, `build.mixed`, or `build.cancelled` webhook; run the [webhooks](../webhooks) example to receive it.
+
+**`results <buildId>`** reads the results:
+
+- Takes the build ID from `status`, or from a webhook's `payload.requestData.buildId`. It is not the build request ID.
 - Calls `GET /developer/v1/project-build-result/:accountId/:projectId/:buildId?limit=25` and follows `data.pagination.nextCursor`
 - Prints the build's state and duration, how many results it has, and the first result
 
@@ -33,4 +43,4 @@ Builds queued through the API are charged like manual runs and appear with the v
 ## Required scopes
 
 - `projects.run`: queue a build
-- `results.read`: read the build's status and results. The example reads the status right after queueing, so it needs this scope even when it only queues a build.
+- `results.read`: read the build's status (`status`) and results (`results`)
