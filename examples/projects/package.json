@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "list": "node index.js list",
+    "delete": "node index.js delete"
   },
   "dependencies": {
     "dotenv": "^16.0.0"
